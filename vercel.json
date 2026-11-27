@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://realtors-judge-touched-hugh.trycloudflare.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://elizabeth-public-johnston-revelation.trycloudflare.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
