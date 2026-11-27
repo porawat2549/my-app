@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://reaction-immediately-compatibility-resulted.trycloudflare.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://console-accessed-consequences-your.trycloudflare.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
