@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://coordinate-juan-annex-female.trycloudflare.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://tiny-harbour-varies-powerseller.trycloudflare.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
