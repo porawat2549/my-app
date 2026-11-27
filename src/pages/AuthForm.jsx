@@ -29,7 +29,7 @@ export default function AuthForm({ mode }) {
     <div className="auth">
       <div className="logo">💳</div>
       <h1>{isReg ? "สร้างบัญชีใหม่" : "ยินดีต้อนรับกลับ"}</h1>
-      <p className="sub">{isReg ? "สมัครเพื่อเริ่มใช้งาน" : "เข้าสู่ระบบเพื่อดูยอดเงินของคุณ"}</p>
+      <p className="sub">{isReg ? "สมัครเพื่อเริ่มใช้งาน" : "เข้าสู่ระบบ"}</p>
       {!isReg && sp.get("timeout") && (
         <div className="banner">⏱️ หมดเวลาใช้งานหรือเซสชันสิ้นสุดแล้ว กรุณาเข้าสู่ระบบอีกครั้ง</div>
       )}
