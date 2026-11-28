@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://tuner-strengthen-victorian-agents.trycloudflare.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://webshots-laws-stayed-syndrome.trycloudflare.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
