@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { baht, dayLabel, fmtFull, fmtTime, uaLabel } from "./ui.jsx";
 
-const MONEY = ["topup", "admin_adjust"];
+const MONEY = ["topup", "admin_adjust", "spin"];
 export function meta(r) {
   switch (r.kind) {
     case "topup": return { icon: "💰", tone: "ok", title: "เติมเงินด้วยสลิป" };
+    case "topup_rejected": return { icon: "🚫", tone: "er", title: "เติมเงินไม่ผ่าน: " + r.note };
     case "admin_adjust": return { icon: "⚖️", tone: "ac", title: r.amount >= 0 ? "แอดมินเพิ่มยอด" : "แอดมินหักยอด" };
+    case "spin": return { icon: "🎡", tone: "ac", title: "หมุนวงล้อ → " + r.note };
+    case "prize_add": return { icon: "🎁", tone: "ok", title: "เพิ่มรางวัล: " + r.note };
+    case "prize_stock": return { icon: "📦", tone: "ok", title: "เพิ่มสต็อก: " + r.note };
+    case "prize_weight": return { icon: "🎚️", tone: "wn", title: "ปรับน้ำหนัก: " + r.note };
+    case "prize_delete": return { icon: "🗑️", tone: "er", title: "ลบรางวัล: " + r.note };
+    case "price_change": return { icon: "🏷️", tone: "wn", title: "ปรับราคาหมุน " + r.note };
     case "role_change": return { icon: "🛡️", tone: "wn", title: `เปลี่ยนสิทธิ์เป็น ${r.note}` };
     case "register": return { icon: "🆕", tone: "ac", title: "สมัครสมาชิก" };
     case "login": return { icon: "🔓", tone: "ok", title: "เข้าสู่ระบบ" };
@@ -17,9 +24,10 @@ export function meta(r) {
 }
 export const CATS = {
   all: null,
-  money: MONEY,
+  money: ["topup", "admin_adjust"],
+  wheel: ["spin", "prize_add", "prize_stock", "prize_weight", "prize_delete", "price_change"],
   session: ["login", "logout", "session_timeout"],
-  fail: ["login_failed"],
+  fail: ["login_failed", "topup_rejected"],
   admin: ["role_change", "register"],
 };
 
@@ -51,7 +59,7 @@ export default function LogList({ rows, admin }) {
               {admin && <Row k="ผู้ใช้" v={r.user_email} />}
               {r.actor_email !== r.user_email && <Row k="ทำรายการโดย" v={r.actor_email} />}
               {r.balance_after != null && <Row k="ยอดคงเหลือหลังรายการ" v={"฿" + baht(r.balance_after)} />}
-              <Row k={r.kind === "topup" ? "รหัสอ้างอิงสลิป" : "หมายเหตุ"} v={r.kind === "role_change" ? "" : r.note} />
+              <Row k={r.kind === "topup" ? "รหัสอ้างอิงสลิป" : "รายละเอียด"} v={r.note} />
               <Row k="IP" v={r.ip} />
               <Row k="อุปกรณ์" v={uaLabel(r.ua)} />
             </dl>

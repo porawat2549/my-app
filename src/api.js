@@ -83,11 +83,19 @@ export async function topup(amount, file) {
   if (!r.ok) throw new Error(j.error || "เกิดข้อผิดพลาด");
   return j;
 }
-export async function myLogs() {
-  if (MOCK) return []; // โหมด mock ยังไม่มีประวัติ
-  return http("/logs");
-}
 export async function adminLogs(userId, limit = 300) {
   if (MOCK) return [];
   return http(`/admin/logs?limit=${limit}` + (userId ? `&user_id=${userId}` : ""));
 }
+
+// ---------- วงล้อสุ่ม / คลังของ / จัดการรางวัล (ต้องเชื่อมกับ Rust) ----------
+const needServer = () => { throw new Error("ฟีเจอร์นี้ต้องเชื่อมกับเซิร์ฟเวอร์จริง (VITE_MOCK=0)"); };
+export async function getPrizes() { if (MOCK) return { price: 0, prizes: [] }; return http("/prizes"); }
+export async function spin() { if (MOCK) return needServer(); return http("/spin", "POST"); }
+export async function inventory() { if (MOCK) return []; return http("/inventory"); }
+export async function adminPrizes() { if (MOCK) return { price: 0, prizes: [] }; return http("/admin/prizes"); }
+export async function addPrize(body) { if (MOCK) return needServer(); return http("/admin/prizes", "POST", body); }
+export async function addStock(id, codes) { if (MOCK) return needServer(); return http(`/admin/prizes/${id}/stock`, "POST", { codes }); }
+export async function setWeight(id, weight) { if (MOCK) return needServer(); return http(`/admin/prizes/${id}/weight`, "POST", { weight }); }
+export async function deletePrize(id) { if (MOCK) return needServer(); return http(`/admin/prizes/${id}/delete`, "POST"); }
+export async function setPrice(price) { if (MOCK) return needServer(); return http("/admin/price", "POST", { price }); }

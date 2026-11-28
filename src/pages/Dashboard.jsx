@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import useAuth from "../useAuth.js";
-import { topup, myLogs } from "../api.js";
-import { Topbar, Skeleton, baht, useToast } from "../ui.jsx";
+import { topup, inventory } from "../api.js";
+import { Topbar, BottomNav, Skeleton, baht, dayLabel, PRIZE_CAT } from "../ui.jsx";
+import { ok, fail, copy } from "../alert.js";
 import IdleGuard from "../IdleGuard.jsx";
-import LogList, { CATS } from "../LogList.jsx";
 
 const CHIPS = [50, 100, 300, 500, 1000];
-const TABS = [["all", "ทั้งหมด"], ["money", "การเงิน"], ["session", "เข้า-ออกระบบ"], ["fail", "ล้มเหลว"]];
 
 export default function Dashboard() {
   const user = useAuth();
@@ -17,12 +17,10 @@ export default function Dashboard() {
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [logs, setLogs] = useState(null);
-  const [cat, setCat] = useState("all");
-  const [tick, setTick] = useState(0);
-  const [toast, toastNode] = useToast();
+  const [inv, setInv] = useState(null);
+  const [shown, setShown] = useState(null);
 
-  useEffect(() => { if (user) myLogs().then(setLogs).catch(() => setLogs([])); }, [user, tick]);
+  useEffect(() => { if (user) inventory().then(setInv).catch(() => setInv([])); }, [user]);
   useEffect(() => {
     if (!file) { setPreview(null); return; }
     const u = URL.createObjectURL(file); setPreview(u);
@@ -38,19 +36,17 @@ export default function Dashboard() {
     setBusy(true);
     try {
       const r = await topup(n, file);
-      setBal(r.balance); setTick((t) => t + 1);
-      toast(`เติมเงินสำเร็จ +฿${baht(n)}`);
-      setAmount(""); setFile(null); setOpen(false);
-    } catch (x) { setErr(x.message); }
+      setBal(r.balance); setAmount(""); setFile(null); setOpen(false);
+      ok("เติมเงินสำเร็จ", `เพิ่ม ฿${baht(n)} · คงเหลือ ฿${baht(r.balance)}`);
+    } catch (x) { setErr(x.message); fail("เติมเงินไม่สำเร็จ", x.message); }
     setBusy(false);
   }
-  const rows = logs && (CATS[cat] ? logs.filter((r) => CATS[cat].includes(r.kind)) : logs);
   return (
     <>
       <Topbar user={user} />
       <div className="page">
         <div className="card hero">
-          <div className="row"><span className="lbl grow">ยอดเงินคงเหลือ</span><span className="badge">{user.role}</span></div>
+          <div className="lbl">ยอดเงินคงเหลือ</div>
           <div className="amt">฿{baht(bal ?? user.balance)}</div>
           <button className="btn light block" style={{ marginTop: 0 }} onClick={() => { setOpen(!open); setErr(""); }}>
             {open ? "ปิด" : "＋ เติมเงิน"}
@@ -74,20 +70,37 @@ export default function Dashboard() {
           </form>
         )}
 
+        <Link to="/wheel" className="card cta">
+          <div className="ic ac">🎡</div>
+          <div className="grow"><div className="bold">วงล้อสุ่มไอเทม</div><div className="mu sm">บัตรเติมเงิน ไอดีเกม และของรางวัลอื่นๆ</div></div>
+          <span className="mu">›</span>
+        </Link>
+
         <div className="card">
-          <h2>ประวัติรายการ</h2>
-          <p className="hint" style={{ marginBottom: 10 }}>แตะรายการเพื่อดูรายละเอียด · ใช้ดูว่ามีใครเข้าบัญชีคุณหรือไม่ได้ด้วย</p>
-          <div className="chips">
-            {TABS.map(([k, t]) => <button key={k} className={"chip " + (cat === k ? "on" : "")} onClick={() => setCat(k)}>{t}</button>)}
-          </div>
-          <LogList rows={rows} />
+          <h2>ของที่ได้รับ</h2>
+          {inv == null && <div className="sk" style={{ height: 60, borderRadius: 12, marginTop: 10 }} />}
+          {inv && !inv.length && <p className="mu">ยังไม่มีของ ลองหมุนวงล้อดูสิ</p>}
+          {inv && inv.map((it) => (
+            <div className="inv" key={it.id}>
+              <div className="ic ac">{it.emoji}</div>
+              <div className="grow">
+                <div className="t bold">{it.name}</div>
+                <div className="mu sm">{PRIZE_CAT[it.category]} · {dayLabel(it.claimed_at)}</div>
+                <code className="secret">{shown === it.id ? it.secret : "••••••••••"}</code>
+              </div>
+              <div className="col">
+                <button className="btn ghost sm" onClick={() => setShown(shown === it.id ? null : it.id)}>{shown === it.id ? "ซ่อน" : "แสดง"}</button>
+                <button className="btn sm" onClick={() => copy(it.secret)}>คัดลอก</button>
+              </div>
+            </div>
+          ))}
         </div>
         <p className="hint" style={{ textAlign: "center", marginTop: 16 }}>
           ออกจากระบบอัตโนมัติเมื่อไม่มีการใช้งาน {Math.round((user.idle_secs || 900) / 60)} นาที
         </p>
       </div>
+      <BottomNav role={user.role} />
       <IdleGuard seconds={user.idle_secs || 900} />
-      {toastNode}
     </>
   );
 }

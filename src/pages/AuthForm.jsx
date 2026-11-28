@@ -27,9 +27,9 @@ export default function AuthForm({ mode }) {
   }
   return (
     <div className="auth">
-      <div className="logo">💳</div>
-      <h1>{isReg ? "สร้างบัญชีใหม่" : "ยินดีต้อนรับกลับ"}</h1>
-      <p className="sub">{isReg ? "สมัครเพื่อเริ่มใช้งาน" : "เข้าสู่ระบบ"}</p>
+      <div className="logo">🛒</div>
+      <h1>PorawatShopTH</h1>
+      <p className="sub">{isReg ? "สร้างบัญชีเพื่อเริ่มใช้งาน" : "เข้าสู่ระบบเพื่อดูยอดเงินและหมุนวงล้อ"}</p>
       {!isReg && sp.get("timeout") && (
         <div className="banner">⏱️ หมดเวลาใช้งานหรือเซสชันสิ้นสุดแล้ว กรุณาเข้าสู่ระบบอีกครั้ง</div>
       )}

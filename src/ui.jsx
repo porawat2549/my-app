@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logout } from "./api.js";
+import { toast } from "./alert.js";
 
-export const baht = (n) =>
-  Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const PRIZE_CAT = { card: "บัตรเติมเงิน", game_id: "ไอดีเกม", other: "อื่นๆ", none: "ไม่ได้รางวัล" };
+export const baht = (n) => Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export const fmtFull = (t) => new Date(t * 1000).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "medium" });
 export const fmtTime = (t) => new Date(t * 1000).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 
@@ -31,14 +31,9 @@ export function uaLabel(ua) {
   return `${os} · ${br}`;
 }
 
+// เดิมเป็น toast ในหน้า ตอนนี้ใช้ SweetAlert2 (คืนค่า [show, null] เพื่อให้โค้ดเดิมใช้ต่อได้)
 export function useToast() {
-  const [t, setT] = useState(null);
-  const timer = useRef();
-  const show = (msg, type = "ok") => {
-    setT({ msg, type }); clearTimeout(timer.current);
-    timer.current = setTimeout(() => setT(null), 3200);
-  };
-  return [show, t && <div className={"toast " + (t.type === "er" ? "er" : "")}>{t.msg}</div>];
+  return [(msg, type = "ok") => toast(msg, type === "er" ? "error" : "success"), null];
 }
 
 export function Skeleton() {
@@ -52,17 +47,24 @@ export function Skeleton() {
 
 export function Topbar({ user }) {
   const nav = useNavigate();
-  const { pathname } = useLocation();
   return (
     <div className="top"><div className="in">
-      <Link className="brand" to="/dashboard">💳 My App</Link>
-      {user.role === "admin" && (
-        <div className="nav">
-          <Link to="/dashboard" className={pathname === "/dashboard" ? "on" : ""}>หน้าหลัก</Link>
-          <Link to="/admin" className={pathname === "/admin" ? "on" : ""}>จัดการ</Link>
-        </div>
-      )}
+      <Link className="brand" to="/dashboard">🛒 PorawatShopTH</Link>
+      <span className={"badge " + user.role}>{user.role}</span>
       <button className="btn ghost sm" onClick={async () => { await logout(); nav("/login"); }}>ออก</button>
+    </div></div>
+  );
+}
+
+export function BottomNav({ role }) {
+  const { pathname } = useLocation();
+  const items = [["/dashboard", "🏠", "หน้าหลัก"], ["/wheel", "🎡", "วงล้อ"]];
+  if (role === "admin") items.push(["/admin", "⚙️", "จัดการ"]);
+  return (
+    <div className="bnav"><div className="in">
+      {items.map(([to, ic, t]) => (
+        <Link key={to} to={to} className={pathname === to ? "on" : ""}><b>{ic}</b>{t}</Link>
+      ))}
     </div></div>
   );
 }

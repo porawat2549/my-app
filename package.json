@@ -1,4 +1,21 @@
-{"name":"app","version":"0.1.0","private":true,"type":"module",
-"scripts":{"dev":"vite --host","build":"vite build","preview":"vite preview --host"},
-"dependencies":{"react":"18.3.1","react-dom":"18.3.1","react-router-dom":"6.28.0"},
-"devDependencies":{"vite":"5.4.11","@vitejs/plugin-react":"4.3.4"}}
+{
+ "name": "app",
+ "version": "0.1.0",
+ "private": true,
+ "type": "module",
+ "scripts": {
+  "dev": "vite --host",
+  "build": "vite build",
+  "preview": "vite preview --host"
+ },
+ "dependencies": {
+  "react": "18.3.1",
+  "react-dom": "18.3.1",
+  "react-router-dom": "6.28.0",
+  "sweetalert2": "^11.14.0"
+ },
+ "devDependencies": {
+  "vite": "5.4.11",
+  "@vitejs/plugin-react": "4.3.4"
+ }
+}
