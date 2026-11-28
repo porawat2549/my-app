@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { baht, dayLabel, fmtFull, fmtTime, uaLabel } from "./ui.jsx";
 
-const MONEY = ["topup", "admin_adjust", "spin"];
+const MONEY = ["topup", "admin_adjust", "spin", "purchase"];
 export function meta(r) {
   switch (r.kind) {
     case "topup": return { icon: "💰", tone: "ok", title: "เติมเงินด้วยสลิป" };
     case "topup_rejected": return { icon: "🚫", tone: "er", title: "เติมเงินไม่ผ่าน: " + r.note };
     case "admin_adjust": return { icon: "⚖️", tone: "ac", title: r.amount >= 0 ? "แอดมินเพิ่มยอด" : "แอดมินหักยอด" };
     case "spin": return { icon: "🎡", tone: "ac", title: "หมุนวงล้อ → " + r.note };
+    case "purchase": return { icon: "🛍️", tone: "ac", title: "ซื้อสินค้า → " + r.note };
+    case "product_add": return { icon: "🆕", tone: "ok", title: "เพิ่มสินค้า: " + r.note };
+    case "product_edit": return { icon: "✏️", tone: "wn", title: "แก้ไขสินค้า: " + r.note };
+    case "product_stock": return { icon: "📦", tone: "ok", title: "เพิ่มสต็อกสินค้า: " + r.note };
+    case "product_delete": return { icon: "🗑️", tone: "er", title: "ลบสินค้า: " + r.note };
+    case "prize_odds": return { icon: "📊", tone: "wn", title: "ปรับเปอร์เซ็นต์วงล้อ: " + r.note };
+    case "prize_image": return { icon: "🖼️", tone: "wn", title: "รูปรางวัล: " + r.note };
+    case "2fa_enable": return { icon: "🔐", tone: "ok", title: "เปิดใช้งาน 2FA" };
+    case "2fa_disable": return { icon: "🔓", tone: "er", title: "ปิด 2FA" };
     case "prize_add": return { icon: "🎁", tone: "ok", title: "เพิ่มรางวัล: " + r.note };
     case "prize_stock": return { icon: "📦", tone: "ok", title: "เพิ่มสต็อก: " + r.note };
     case "prize_weight": return { icon: "🎚️", tone: "wn", title: "ปรับน้ำหนัก: " + r.note };
@@ -24,9 +33,10 @@ export function meta(r) {
 }
 export const CATS = {
   all: null,
-  money: ["topup", "admin_adjust"],
-  wheel: ["spin", "prize_add", "prize_stock", "prize_weight", "prize_delete", "price_change"],
-  session: ["login", "logout", "session_timeout"],
+  money: ["topup", "admin_adjust", "purchase"],
+  wheel: ["spin", "prize_add", "prize_stock", "prize_weight", "prize_delete", "price_change", "prize_odds", "prize_image"],
+  shop: ["purchase", "product_add", "product_edit", "product_stock", "product_delete"],
+  session: ["login", "logout", "session_timeout", "2fa_enable", "2fa_disable"],
   fail: ["login_failed", "topup_rejected"],
   admin: ["role_change", "register"],
 };

@@ -32,8 +32,9 @@ export async function register(email, password) {
   const u = { id: Date.now(), email, password, role: "user", balance: 0 };
   d.users.push(u); save(d); localStorage.setItem(S, u.id); return pub(u);
 }
-export async function login(email, password) {
-  if (!MOCK) return http("/auth/login", "POST", { email, password });
+// ถ้าบัญชีเปิด 2FA และยังไม่ส่ง code จะได้ { need_2fa: true } (ยังไม่ล็อกอิน)
+export async function login(email, password, code) {
+  if (!MOCK) return http("/auth/login", "POST", { email, password, code: code || undefined });
   const u = db().users.find((x) => x.email === email && x.password === password);
   if (!u) throw new Error("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
   localStorage.setItem(S, u.id); return pub(u);
@@ -99,3 +100,39 @@ export async function addStock(id, codes) { if (MOCK) return needServer(); retur
 export async function setWeight(id, weight) { if (MOCK) return needServer(); return http(`/admin/prizes/${id}/weight`, "POST", { weight }); }
 export async function deletePrize(id) { if (MOCK) return needServer(); return http(`/admin/prizes/${id}/delete`, "POST"); }
 export async function setPrice(price) { if (MOCK) return needServer(); return http("/admin/price", "POST", { price }); }
+export async function setPrizeImage(id, image) { if (MOCK) return needServer(); return http(`/admin/prizes/${id}/image`, "POST", { image }); }
+// odds = [{ id, percent }] รวมต้อง 100
+export async function setOdds(odds) { if (MOCK) return needServer(); return http("/admin/prizes/odds", "POST", { odds }); }
+
+// ---------- ร้านค้า (ทุกคนดูได้ ซื้อต้องล็อกอิน) ----------
+async function publicGet(path) {
+  const r = await fetch("/api" + path, { credentials: "include" });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "เกิดข้อผิดพลาด");
+  return j;
+}
+export async function products() { if (MOCK) return []; return publicGet("/products"); }
+export async function product(id) { if (MOCK) throw new Error("ต้องเชื่อมกับเซิร์ฟเวอร์จริง (VITE_MOCK=0)"); return publicGet("/products/" + id); }
+export async function buyProduct(id) { if (MOCK) return needServer(); return http(`/products/${id}/buy`, "POST"); }
+export async function adminProducts() { if (MOCK) return []; return http("/admin/products"); }
+export async function addProduct(body) { if (MOCK) return needServer(); return http("/admin/products", "POST", body); }
+export async function editProduct(id, body) { if (MOCK) return needServer(); return http(`/admin/products/${id}`, "POST", body); }
+export async function addProductStock(id, codes) { if (MOCK) return needServer(); return http(`/admin/products/${id}/stock`, "POST", { codes }); }
+export async function deleteProduct(id) { if (MOCK) return needServer(); return http(`/admin/products/${id}/delete`, "POST"); }
+
+// อัปโหลดรูป/วิดีโอ (แอดมินเท่านั้น) คืน { url, type }
+export async function upload(file) {
+  if (MOCK) return needServer();
+  const fd = new FormData();
+  fd.append("file", file);
+  const r = await fetch("/api/admin/upload", { method: "POST", credentials: "include", body: fd });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401) { toLogin(); throw new Error("หมดเวลาใช้งาน"); }
+  if (!r.ok) throw new Error(j.error || (r.status === 413 ? "ไฟล์ใหญ่เกินไป" : "อัปโหลดไม่สำเร็จ"));
+  return j;
+}
+
+// ---------- 2FA (Google Authenticator / Authy ฯลฯ) ----------
+export async function twofaSetup() { if (MOCK) return needServer(); return http("/2fa/setup", "POST"); }
+export async function twofaEnable(code) { if (MOCK) return needServer(); return http("/2fa/enable", "POST", { code }); }
+export async function twofaDisable(password, code) { if (MOCK) return needServer(); return http("/2fa/disable", "POST", { password, code }); }

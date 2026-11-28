@@ -12,7 +12,8 @@
   "react": "18.3.1",
   "react-dom": "18.3.1",
   "react-router-dom": "6.28.0",
-  "sweetalert2": "^11.14.0"
+  "sweetalert2": "^11.14.0",
+  "qrcode": "1.5.4"
  },
  "devDependencies": {
   "vite": "5.4.11",

@@ -15,15 +15,23 @@ export default function AuthForm({ mode }) {
   const [show, setShow] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [need2fa, setNeed2fa] = useState(false); // รหัสผ่านถูกแล้ว รอกรอกรหัส 2FA
+  const [code, setCode] = useState("");
   const sc = strength(pw);
+  // เด้งกลับหน้าที่ตั้งใจไว้หลังล็อกอิน (รับเฉพาะ path ภายในเว็บ กัน open redirect)
+  const next = (() => { const n = sp.get("next"); return n && /^\/(?!\/)/.test(n) ? n : "/"; })();
 
   async function submit(e) {
     e.preventDefault(); setErr("");
     if (isReg && pw.length < 6) return setErr("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
     if (isReg && pw !== pw2) return setErr("รหัสผ่านไม่ตรงกัน");
     setBusy(true);
-    try { await (isReg ? register : login)(email.trim(), pw); nav("/dashboard"); }
-    catch (x) { setErr(x.message); setBusy(false); }
+    try {
+      if (isReg) { await register(email.trim(), pw); nav(next); return; }
+      const r = await login(email.trim(), pw, need2fa ? code : undefined);
+      if (r && r.need_2fa) { setNeed2fa(true); setBusy(false); return; }
+      nav(next);
+    } catch (x) { setErr(x.message); setBusy(false); if (need2fa) setCode(""); }
   }
   return (
     <div className="auth">
@@ -34,6 +42,12 @@ export default function AuthForm({ mode }) {
         <div className="banner">⏱️ หมดเวลาใช้งานหรือเซสชันสิ้นสุดแล้ว กรุณาเข้าสู่ระบบอีกครั้ง</div>
       )}
       <form className="card" onSubmit={submit}>
+        {need2fa ? (<>
+          <div className="bold" style={{ textAlign: "center", fontSize: 18 }}>🔐 ยืนยันตัวตน 2 ชั้น</div>
+          <p className="hint" style={{ textAlign: "center" }}>เปิดแอป Authenticator แล้วกรอกรหัส 6 หลักของ<br /><b>{email}</b></p>
+          <input className="codebox" autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="••••••"
+            value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
+        </>) : (<>
         <label style={{ marginTop: 0 }}>อีเมล</label>
         <input type="email" autoComplete="email" inputMode="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <label>รหัสผ่าน</label>
@@ -49,11 +63,13 @@ export default function AuthForm({ mode }) {
           <label>ยืนยันรหัสผ่าน</label>
           <input type={show ? "text" : "password"} autoComplete="new-password" required value={pw2} onChange={(e) => setPw2(e.target.value)} />
         </>)}
+        </>)}
         {err && <div className="err">{err}</div>}
-        <button className="btn block" disabled={busy}>{busy ? "กำลังดำเนินการ..." : isReg ? "สมัครสมาชิก" : "เข้าสู่ระบบ"}</button>
+        <button className="btn block" disabled={busy || (need2fa && code.length !== 6)}>{busy ? "กำลังดำเนินการ..." : isReg ? "สมัครสมาชิก" : need2fa ? "ยืนยัน" : "เข้าสู่ระบบ"}</button>
+        {need2fa && <button type="button" className="btn ghost block" style={{ marginTop: 10 }} onClick={() => { setNeed2fa(false); setCode(""); setErr(""); }}>ย้อนกลับ</button>}
       </form>
-      <p className="mu sm" style={{ textAlign: "center" }}>
-        {isReg ? <>มีบัญชีแล้ว? <Link to="/login">เข้าสู่ระบบ</Link></> : <>ยังไม่มีบัญชี? <Link to="/register">สมัครสมาชิก</Link></>}
+      <p className="mu sm" style={{ textAlign: "center" }}><Link to="/">‹ กลับไปร้านค้า</Link><br />
+        {isReg ? <>มีบัญชีแล้ว? <Link to="/login">เข้าสู่ระบบ</Link></> : <>ยังไม่มีบัญชี? <Link to={"/register"}>สมัครสมาชิก</Link></>}
       </p>
     </div>
   );

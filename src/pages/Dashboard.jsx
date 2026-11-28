@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../useAuth.js";
 import { topup, inventory } from "../api.js";
-import { Topbar, BottomNav, Skeleton, baht, dayLabel, PRIZE_CAT } from "../ui.jsx";
+import { Navbar, BottomNav, Skeleton, baht, dayLabel, PRIZE_CAT } from "../ui.jsx";
 import { ok, fail, copy } from "../alert.js";
 import IdleGuard from "../IdleGuard.jsx";
 
@@ -43,8 +43,9 @@ export default function Dashboard() {
   }
   return (
     <>
-      <Topbar user={user} />
+      <Navbar user={user} balance={bal ?? user.balance} />
       <div className="page">
+        <h1 className="title">บัญชีของฉัน</h1>
         <div className="card hero">
           <div className="lbl">ยอดเงินคงเหลือ</div>
           <div className="amt">฿{baht(bal ?? user.balance)}</div>
@@ -70,19 +71,31 @@ export default function Dashboard() {
           </form>
         )}
 
-        <Link to="/wheel" className="card cta">
-          <div className="ic ac">🎡</div>
-          <div className="grow"><div className="bold">วงล้อสุ่มไอเทม</div><div className="mu sm">บัตรเติมเงิน ไอดีเกม และของรางวัลอื่นๆ</div></div>
-          <span className="mu">›</span>
-        </Link>
+        <div className="grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <Link to="/wheel" className="card cta" style={{ marginTop: 0 }}>
+            <div className="ic ac">🎡</div>
+            <div className="grow"><div className="bold">วงล้อ</div><div className="mu sm">ลุ้นรางวัล</div></div>
+          </Link>
+          <Link to="/" className="card cta" style={{ marginTop: 0 }}>
+            <div className="ic ac">🛍️</div>
+            <div className="grow"><div className="bold">ร้านค้า</div><div className="mu sm">เลือกซื้อสินค้า</div></div>
+          </Link>
+        </div>
+        {user.totp_enabled === false && (
+          <Link to="/security" className="card cta" style={{ borderColor: "rgba(251,191,36,.5)" }}>
+            <div className="ic wn">🔐</div>
+            <div className="grow"><div className="bold">เปิด 2FA เพื่อความปลอดภัย</div><div className="mu sm">บัญชียังไม่ได้เปิดการยืนยันตัวตนสองชั้น</div></div>
+            <span className="mu">›</span>
+          </Link>
+        )}
 
         <div className="card">
           <h2>ของที่ได้รับ</h2>
           {inv == null && <div className="sk" style={{ height: 60, borderRadius: 12, marginTop: 10 }} />}
-          {inv && !inv.length && <p className="mu">ยังไม่มีของ ลองหมุนวงล้อดูสิ</p>}
+          {inv && !inv.length && <p className="mu">ยังไม่มีของ ลองซื้อสินค้าหรือหมุนวงล้อดูสิ</p>}
           {inv && inv.map((it) => (
             <div className="inv" key={it.id}>
-              <div className="ic ac">{it.emoji}</div>
+              <div className="ic ac">{it.image ? <img src={it.image} alt="" /> : it.emoji}</div>
               <div className="grow">
                 <div className="t bold">{it.name}</div>
                 <div className="mu sm">{PRIZE_CAT[it.category]} · {dayLabel(it.claimed_at)}</div>

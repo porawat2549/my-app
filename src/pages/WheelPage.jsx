@@ -1,30 +1,33 @@
 import { useEffect, useState } from "react";
-import useAuth from "../useAuth.js";
+import { useNavigate } from "react-router-dom";
+import { useOptionalUser } from "../useAuth.js";
 import { getPrizes, spin } from "../api.js";
-import { Topbar, BottomNav, Skeleton, baht, PRIZE_CAT } from "../ui.jsx";
+import { Navbar, BottomNav, baht, PRIZE_CAT } from "../ui.jsx";
 import { ask, fail, base, copy, esc } from "../alert.js";
 import IdleGuard from "../IdleGuard.jsx";
 import Wheel from "../Wheel.jsx";
+import { confetti } from "../fx.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export default function WheelPage() {
-  const user = useAuth();
+  const nav = useNavigate();
+  const { user, loaded } = useOptionalUser();
   const [data, setData] = useState(null);
   const [bal, setBal] = useState(null);
   const [deg, setDeg] = useState(0);
   const [anim, setAnim] = useState(false);
   const [busy, setBusy] = useState(false);
   const load = () => getPrizes().then(setData).catch((e) => fail("โหลดวงล้อไม่สำเร็จ", e.message));
-  useEffect(() => { if (user) load(); }, [user]);
-  if (!user) return <Skeleton />;
+  useEffect(() => { load(); }, []);
 
   const prizes = data ? data.prizes : [];
   const price = data ? data.price : 0;
-  const balance = bal ?? user.balance;
+  const balance = bal ?? (user ? user.balance : 0);
 
   async function doSpin() {
     if (busy || !prizes.length) return;
+    if (!user) { nav("/login?next=" + encodeURIComponent("/wheel")); return; } // ต้องล็อกอินตอนหมุนเท่านั้น
     if (!(await ask(`หมุนวงล้อ ฿${baht(price)}?`, `ยอดคงเหลือ ฿${baht(balance)}`, "หมุนเลย"))) return;
     setBusy(true);
     try {
@@ -41,8 +44,10 @@ export default function WheelPage() {
       if (r.prize.category === "none") {
         await base.fire({ icon: "info", title: "เสียใจด้วย 😢", text: "รอบนี้ไม่ได้รางวัล ลองใหม่อีกครั้งนะ", confirmButtonText: "ตกลง" });
       } else {
+        confetti(90);
         const res = await base.fire({
-          icon: "success", title: `ได้รับ ${r.prize.emoji} ${r.prize.name}`,
+          icon: r.prize.image ? undefined : "success", imageUrl: r.prize.image || undefined, imageHeight: 120, imageAlt: r.prize.name,
+          title: `ได้รับ ${r.prize.emoji} ${r.prize.name}`,
           html: `<div>โค้ด / ไอดีของคุณ</div><pre class="swsecret">${esc(r.secret)}</pre><div style="font-size:13px;opacity:.7">ดูย้อนหลังได้ที่หน้าหลัก → ของที่ได้รับ</div>`,
           showDenyButton: true, denyButtonText: "คัดลอก", confirmButtonText: "ตกลง",
         });
@@ -54,13 +59,13 @@ export default function WheelPage() {
   }
   return (
     <>
-      <Topbar user={user} />
+      <Navbar user={user} balance={bal ?? undefined} />
       <div className="page">
         <div className="card" style={{ textAlign: "center" }}>
-          <div className="row"><span className="mu grow" style={{ textAlign: "left" }}>ยอดคงเหลือ</span><b>฿{baht(balance)}</b></div>
+          {user && <div className="row"><span className="mu grow" style={{ textAlign: "left" }}>ยอดคงเหลือ</span><b>฿{baht(balance)}</b></div>}
           <Wheel prizes={prizes} deg={deg} anim={anim} />
           <button className="btn block" disabled={busy || !prizes.length} onClick={doSpin}>
-            {busy ? "กำลังหมุน…" : `🎡 หมุนวงล้อ ฿${baht(price)}`}
+            {busy ? "กำลังหมุน…" : loaded && !user ? "🔑 เข้าสู่ระบบเพื่อหมุน" : `🎡 หมุนวงล้อ ฿${baht(price)}`}
           </button>
           <p className="hint">ระบบสุ่มและแจกรางวัลที่เซิร์ฟเวอร์ ผลไม่เปลี่ยนแม้ปิดหน้าจอระหว่างหมุน</p>
         </div>
@@ -69,7 +74,7 @@ export default function WheelPage() {
           {!prizes.length && <p className="mu">ตอนนี้ยังไม่มีรางวัลในวงล้อ</p>}
           {prizes.map((p) => (
             <div className="li" key={p.id} style={{ cursor: "default" }}>
-              <div className="ic ac">{p.emoji}</div>
+              <div className="ic ac">{p.image ? <img src={p.image} alt="" /> : p.emoji}</div>
               <div className="grow"><div className="t bold">{p.name}</div>
                 <div className="mu sm">{PRIZE_CAT[p.category]}{p.stock != null ? ` · เหลือ ${p.stock}` : ""}</div></div>
               <div className="am">{p.odds.toFixed(1)}%</div>
@@ -77,8 +82,8 @@ export default function WheelPage() {
           ))}
         </div>
       </div>
-      <BottomNav role={user.role} />
-      <IdleGuard seconds={user.idle_secs || 900} />
+      <BottomNav role={user?.role} guest={loaded && !user} />
+      {user && <IdleGuard seconds={user.idle_secs || 900} />}
     </>
   );
 }

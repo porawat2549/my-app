@@ -33,6 +33,14 @@ export async function askLines(title, placeholder) {
   });
   return r.isConfirmed ? r.value.split("\n").map((s) => s.trim()).filter(Boolean) : null;
 }
+export async function askText(title, placeholder, confirmText = "ตกลง") {
+  const r = await base.fire({
+    title, input: "text", inputPlaceholder: placeholder, showCancelButton: true, reverseButtons: true,
+    confirmButtonText: confirmText, cancelButtonText: "ยกเลิก",
+    inputValidator: (v) => (!v.trim() ? "กรุณากรอกข้อมูล" : undefined),
+  });
+  return r.isConfirmed ? r.value.trim() : null;
+}
 export async function copy(text) {
   try { await navigator.clipboard.writeText(text); toast("คัดลอกแล้ว"); }
   catch { toast("คัดลอกไม่ได้ ลองกดค้างที่ข้อความ", "error"); }
