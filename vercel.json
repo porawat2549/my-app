@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://have-grocery-jumping-referenced.trycloudflare.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://curriculum-leadership-camping-sauce.trycloudflare.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
